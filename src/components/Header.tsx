@@ -1,14 +1,22 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { DEMO_USER } from '../lib/data';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser, useClerk } from '@clerk/clerk-react';
 
 const Header = () => {
   const [showDropdown, setShowDropdown] = useState(false);
-  // Use static data instead of localStorage
-  const userName = DEMO_USER.name;
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+  
+  const userName = user?.firstName || user?.username || 'User';
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
+  };
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
   };
 
   return (
@@ -34,9 +42,17 @@ const Header = () => {
             onClick={toggleDropdown}
             className="bg-white/20 text-sm text-white px-4 py-2 rounded-full shadow-sm flex items-center hover:bg-white/30 transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+            {user?.imageUrl ? (
+              <img 
+                src={user.imageUrl} 
+                alt="Profile" 
+                className="h-5 w-5 rounded-full mr-1" 
+              />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
             <span className="ml-1">{userName}</span>
           </button>
           
@@ -55,10 +71,12 @@ const Header = () => {
                   Profile
                 </div>
               </Link>
-              <Link
-                to="/login"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                onClick={() => setShowDropdown(false)}
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  handleSignOut();
+                }}
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,7 +84,7 @@ const Header = () => {
                   </svg>
                   Sign Out
                 </div>
-              </Link>
+              </button>
             </div>
           )}
         </div>
