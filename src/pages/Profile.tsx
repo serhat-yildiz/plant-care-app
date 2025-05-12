@@ -1,23 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DEMO_USER } from '../lib/data';
+import { useUser, useClerk } from '@clerk/clerk-react';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
+  const { signOut } = useClerk();
   
-  const [name, setName] = useState(DEMO_USER.name);
-  const [email, setEmail] = useState(DEMO_USER.email);
-  
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  
+  const [name, setName] = useState(user?.firstName || '');
   const [profileError, setProfileError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
-  
   const [loading, setLoading] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,56 +21,49 @@ const Profile = () => {
       setProfileSuccess(null);
       setLoading(true);
       
-      // Simulate a delay
-      setTimeout(() => {
+      if (user) {
+        console.log('Updating profile with firstName:', name);
+        
+        // Ensure we're using camelCase as required by Clerk API
+        await user.update({
+          firstName: name
+        });
+        
+        console.log('Profile updated successfully');
         setProfileSuccess('Profile successfully updated.');
-        setLoading(false);
-      }, 1000);
+      }
     } catch (error) {
+      console.error('Profile update error:', error);
+      
       if (error instanceof Error) {
-        setProfileError(error.message);
+        const errorMessage = `Error: ${error.message}`;
+        console.error(errorMessage);
+        setProfileError(errorMessage);
+      } else if (typeof error === 'object' && error !== null) {
+        try {
+          const errorString = JSON.stringify(error);
+          console.error('Error object:', errorString);
+          setProfileError(`Error: ${errorString}`);
+        } catch (_) {
+          console.error('Could not stringify error object');
+          setProfileError('An error occurred while updating your profile.');
+        }
       } else {
         setProfileError('An error occurred while updating your profile.');
       }
+    } finally {
       setLoading(false);
     }
   };
 
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match.');
-      return;
-    }
-    
-    try {
-      setPasswordError(null);
-      setPasswordSuccess(null);
-      setPasswordLoading(true);
-      
-      // Simulate a delay
-      setTimeout(() => {
-        setPasswordSuccess('Password successfully updated.');
-        setNewPassword('');
-        setConfirmPassword('');
-        setPasswordLoading(false);
-      }, 1000);
-    } catch (error) {
-      if (error instanceof Error) {
-        setPasswordError(error.message);
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        setPasswordError((error as {message: string}).message);
-      } else {
-        setPasswordError('An error occurred while updating your password.');
-      }
-      setPasswordLoading(false);
-    }
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
+
+  if (!user) {
+    return <div>Loading user profile...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -137,12 +124,11 @@ const Profile = () => {
                   id="email"
                   name="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={user.emailAddresses[0]?.emailAddress || ''}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                   disabled
                 />
-                <p className="mt-1 text-xs text-gray-500">Email address cannot be changed.</p>
+                <p className="mt-1 text-xs text-gray-500">Email address cannot be changed here.</p>
               </div>
               
               <div className="flex justify-end">
@@ -158,79 +144,40 @@ const Profile = () => {
           </form>
         </div>
         
-        {/* Change Password */}
+        {/* Change Password - Clerk handles this, but we keep UI for consistency */}
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Change Password</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Password Management</h2>
           
           {passwordError && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <div className="mb-4 bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">{passwordError}</p>
+                  <p className="text-sm text-yellow-700">{passwordError}</p>
                 </div>
               </div>
             </div>
           )}
           
-          {passwordSuccess && (
-            <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-700">{passwordSuccess}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          <p className="text-sm text-gray-600 mb-4">
+            Password management is handled through Clerk's secure interface. You can reset your password or update it through the authentication flow.
+          </p>
           
-          <form onSubmit={handlePasswordUpdate}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">New Password</label>
-                <input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={passwordLoading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  {passwordLoading ? 'Updating...' : 'Update Password'}
-                </button>
-              </div>
-            </div>
-          </form>
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setPasswordError('Password resets are handled through Clerk\'s secure interface.');
+                navigate('/reset-password');
+              }}
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Reset Password
+            </button>
+          </div>
         </div>
         
         {/* Account Actions */}
