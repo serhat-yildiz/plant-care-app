@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthBackground from '../ui/backgrounds/AuthBackground';
+import AuthBackground from '../components/backgrounds/AuthBackground';
 
 const UpdatePassword = () => {
   const [password, setPassword] = useState('');

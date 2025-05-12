@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import AuthBackground from '../ui/backgrounds/AuthBackground';
+import AuthBackground from '../components/backgrounds/AuthBackground';
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');
