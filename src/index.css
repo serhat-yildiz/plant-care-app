@@ -10,9 +10,91 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f9fafb;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Prevent scrolling on auth pages */
+html, body {
+  max-width: 100%;
+  height: 100%;
+}
+
+/* Animation for the floating background effect */
+@keyframes floatingBg {
+  0% {
+    background-position: 0 0, 50px 50px;
+  }
+  25% {
+    background-position: 50px 25px, 100px 100px;
+  }
+  50% {
+    background-position: 25px 50px, 50px 150px;
+  }
+  75% {
+    background-position: -25px 25px, 0px 100px;
+  }
+  100% {
+    background-position: 0 0, 50px 50px;
+  }
+}
+
+/* Animations for the plant petals */
+@keyframes petal1 {
+  0%, 100% { transform: rotate(0deg) translateX(0) translateY(0); }
+  50% { transform: rotate(5deg) translateX(10px) translateY(-5px); }
+}
+
+@keyframes petal2 {
+  0%, 100% { transform: rotate(0deg) translateX(0) translateY(0); }
+  50% { transform: rotate(-5deg) translateX(-10px) translateY(-5px); }
+}
+
+@keyframes petal3 {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Class for adding leaf shadows */
+.leaf-shadow {
+  filter: drop-shadow(0 4px 6px rgba(0, 100, 0, 0.1));
+}
+
+/* Class for the auth page background */
+.auth-background {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-background::before,
+.auth-background::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.2;
+  background-size: cover;
+}
+
+/* Fix for Clerk UI scroll issues */
+.cl-rootBox {
+  overflow: visible !important;
+  max-height: unset !important;
+}
+
+/* Fix for scrollbars on login/register pages */
+.min-h-screen {
+  min-height: 100vh;
+  width: 100vw;
+  max-width: 100%;
+  position: relative;
+  overflow-x: hidden;
 }
