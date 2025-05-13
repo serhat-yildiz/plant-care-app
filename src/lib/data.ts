@@ -68,11 +68,14 @@ export const PLANTS: Plant[] = [
     id: 'plant-1',
     name: 'Orchid',
     species: 'Phalaenopsis',
+    plant_type: 'Flowering',
+    weekly_water_need: 250,
+    expected_humidity: 60,
     location_id: 'loc-1',
     image_url: 'https://images.unsplash.com/photo-1569880153113-76e33fc52d5f?auto=format&fit=crop&w=800&q=80',
     planted_date: '2023-01-15',
     watering_interval: 7,
-    last_watering_date: '2023-07-10',
+    last_watering_date: new Date().toISOString().split('T')[0],
     user_id: DEMO_USER.id,
     created_at: CURRENT_DATE
   },
@@ -80,11 +83,14 @@ export const PLANTS: Plant[] = [
     id: 'plant-2',
     name: 'Cactus',
     species: 'Echinopsis',
+    plant_type: 'Succulent',
+    weekly_water_need: 50,
+    expected_humidity: 30,
     location_id: 'loc-2',
     image_url: 'https://images.unsplash.com/photo-1569880153113-76e33fc52d5f?auto=format&fit=crop&w=800&q=80',
     planted_date: '2022-11-20',
     watering_interval: 14,
-    last_watering_date: '2023-07-05',
+    last_watering_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     user_id: DEMO_USER.id,
     created_at: CURRENT_DATE
   },
@@ -92,11 +98,14 @@ export const PLANTS: Plant[] = [
     id: 'plant-3',
     name: 'Violet',
     species: 'Viola',
+    plant_type: 'Flowering',
+    weekly_water_need: 300,
+    expected_humidity: 50,
     location_id: 'loc-1',
     image_url: 'https://images.unsplash.com/photo-1569880153113-76e33fc52d5f?auto=format&fit=crop&w=800&q=80',
     planted_date: '2023-03-05',
     watering_interval: 3,
-    last_watering_date: '2023-07-12',
+    last_watering_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     user_id: DEMO_USER.id,
     created_at: CURRENT_DATE
   },
@@ -104,11 +113,14 @@ export const PLANTS: Plant[] = [
     id: 'plant-4',
     name: 'Succulent',
     species: 'Echeveria',
+    plant_type: 'Succulent',
+    weekly_water_need: 100,
+    expected_humidity: 40,
     location_id: 'loc-3',
     image_url: 'https://images.unsplash.com/photo-1569880153113-76e33fc52d5f?auto=format&fit=crop&w=800&q=80',
     planted_date: '2022-09-10',
     watering_interval: 10,
-    last_watering_date: '2023-07-08',
+    last_watering_date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     user_id: DEMO_USER.id,
     created_at: CURRENT_DATE
   },
@@ -116,11 +128,14 @@ export const PLANTS: Plant[] = [
     id: 'plant-5',
     name: 'Aloe Vera',
     species: 'Aloe',
+    plant_type: 'Succulent',
+    weekly_water_need: 150,
+    expected_humidity: 35,
     location_id: 'loc-4',
     image_url: 'https://images.unsplash.com/photo-1569880153113-76e33fc52d5f?auto=format&fit=crop&w=800&q=80',
     planted_date: '2023-02-20',
     watering_interval: 7,
-    last_watering_date: '2023-07-11',
+    last_watering_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     user_id: DEMO_USER.id,
     created_at: CURRENT_DATE
   }
@@ -134,11 +149,17 @@ const generateHealthData = (plantId: string, startDate: Date, days: number): Pla
   for (let i = 0; i < days; i++) {
     // Generate random health score between 60-100
     const healthScore = Math.floor(Math.random() * 41) + 60;
+    // Generate random water amount between 20-300 mm
+    const actualWater = Math.floor(Math.random() * 281) + 20;
+    // Generate random humidity between 20-90%
+    const actualHumidity = Math.floor(Math.random() * 71) + 20;
     
     healthData.push({
       id: `health-${plantId}-${i}`,
       plant_id: plantId,
       health_score: healthScore,
+      actual_water: actualWater,
+      actual_humidity: actualHumidity,
       date: new Date(currentDate).toISOString().split('T')[0],
       created_at: new Date(currentDate).toISOString()
     });
