@@ -15,6 +15,7 @@ const Profile = () => {
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   // Initialize form fields when user data is loaded
   useEffect(() => {
@@ -22,6 +23,7 @@ const Profile = () => {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
       setUsername(user.username || '');
+      setAvatarUrl(user.imageUrl || '');
     }
   }, [isLoaded, user]);
 
@@ -66,6 +68,30 @@ const Profile = () => {
       } else {
         setProfileError('An error occurred while updating your profile.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    
+    try {
+      setProfileError(null);
+      setProfileSuccess(null);
+      setLoading(true);
+      
+      if (user) {
+        const file = e.target.files[0];
+        
+        await user.setProfileImage({ file });
+        setAvatarUrl(user.imageUrl);
+        
+        setProfileSuccess('Profile avatar successfully updated.');
+      }
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      setProfileError('Failed to upload avatar. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -137,6 +163,32 @@ const Profile = () => {
               </div>
             </div>
           )}
+          
+          {/* Avatar Section */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Profile Picture</label>
+            <div className="flex items-center space-x-6">
+              <div className="shrink-0">
+                <img 
+                  className="h-16 w-16 object-cover rounded-full"
+                  src={avatarUrl || 'https://via.placeholder.com/150?text=User'} 
+                  alt="Profile avatar" 
+                />
+              </div>
+              <label className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <span>Change Avatar</span>
+                <input 
+                  id="avatar-upload" 
+                  name="avatar-upload" 
+                  type="file" 
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleAvatarUpload}
+                  disabled={loading}
+                />
+              </label>
+            </div>
+          </div>
           
           <form onSubmit={handleProfileUpdate}>
             <div className="space-y-4">
