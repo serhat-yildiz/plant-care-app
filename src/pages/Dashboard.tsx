@@ -1,36 +1,43 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PlantCard from '../components/PlantCard';
-import type { Plant, PlantHealth } from '../types/types';
+import WeatherWidget from '../components/WeatherWidget';
+import type { Plant, PlantHealth, Location } from '../types/types';
 import { api } from '../lib/data';
 
 const Dashboard = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [healthData, setHealthData] = useState<Record<string, number>>({});
 
   // Get plants
   useEffect(() => {
-    const fetchPlants = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Static data API call
-        const data = await api.getPlants();
+        // Static data API calls
+        const plantsData = await api.getPlants();
+        const locationsData = await api.getLocations();
         
-        if (data) {
-          setPlants(data);
+        if (plantsData) {
+          setPlants(plantsData);
           // Get plant health data
-          await fetchHealthData(data.map((p: Plant) => p.id));
+          await fetchHealthData(plantsData.map((p: Plant) => p.id));
+        }
+
+        if (locationsData) {
+          setLocations(locationsData);
         }
       } catch (error) {
-        console.error('Error loading plants:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlants();
+    fetchData();
   }, []);
 
   // Get plant health data
@@ -91,6 +98,9 @@ const Dashboard = () => {
     );
   }
 
+  // Show at most 3 locations for weather widgets
+  const displayedLocations = locations.slice(0, 3);
+
   return (
     <div className="pb-10">
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 shadow-sm">
@@ -112,6 +122,34 @@ const Dashboard = () => {
           </Link>
         </div>
       </div>
+
+      {/* Weather Section */}
+      {displayedLocations.length > 0 && (
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Weather</h2>
+            <Link
+              to="/weather"
+              className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center"
+            >
+              All Weather
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayedLocations.map(location => (
+              <WeatherWidget
+                key={location.id}
+                latitude={location.latitude}
+                longitude={location.longitude}
+                locationName={location.name}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {plants.length === 0 ? (
         <div className="bg-white shadow-md rounded-xl p-8 text-center border border-gray-100">
@@ -135,15 +173,18 @@ const Dashboard = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plants.map(plant => (
-            <PlantCard
-              key={plant.id}
-              plant={plant}
-              healthScore={healthData[plant.id] || 0}
-              onDelete={handleDeletePlant}
-            />
-          ))}
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">My Plants</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {plants.map(plant => (
+              <PlantCard
+                key={plant.id}
+                plant={plant}
+                healthScore={healthData[plant.id] || 0}
+                onDelete={handleDeletePlant}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
