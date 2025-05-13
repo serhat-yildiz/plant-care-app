@@ -130,7 +130,7 @@ const LocationDetail = () => {
             </div>
           </div>
           <div className="text-gray-600 bg-white px-4 py-2 rounded-lg shadow-sm">
-            <p className="text-sm">Koordinatlar:</p>
+            <p className="text-sm">Coordinates:</p>
             <p className="font-mono text-xs">{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
           </div>
         </div>

@@ -1,40 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-import type { ChartOptions } from 'chart.js';
-import type { Plant, Location, PlantHealth } from '../types/types';
+import type { Plant, Location } from '../types/types';
 import { api } from '../lib/data';
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import PlantHealthChart from '../components/PlantHealthChart';
 
 const PlantDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [plant, setPlant] = useState<Plant | null>(null);
   const [location, setLocation] = useState<Location | null>(null);
-  const [healthData, setHealthData] = useState<PlantHealth[]>([]);
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
-    endDate: new Date().toISOString().split('T')[0], // today
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,10 +33,6 @@ const PlantDetail = () => {
               setLocation(locationData);
             }
           }
-          
-          // Get health data
-          const healthData = await api.getPlantHealth(id, dateRange.startDate, dateRange.endDate);
-          setHealthData(healthData);
         } else {
           setError('Plant not found.');
         }
@@ -76,44 +45,7 @@ const PlantDetail = () => {
     };
 
     fetchPlantData();
-  }, [id, dateRange.startDate, dateRange.endDate]);
-
-  // When date range changes
-  const handleDateRangeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setDateRange(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Chart data
-  const chartData = {
-    labels: healthData.map(data => new Date(data.date).toLocaleDateString('en-US')),
-    datasets: [
-      {
-        label: 'Health Score (%)',
-        data: healthData.map(data => data.health_score),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-      }
-    ],
-  };
-
-  const chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Plant Health Data',
-      },
-    },
-  };
+  }, [id]);
 
   if (loading) {
     return (
@@ -172,6 +104,18 @@ const PlantDetail = () => {
                 <span className="text-gray-800">{plant.species}</span>
               </div>
               <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Plant Type:</span>
+                <span className="text-gray-800">{plant.plant_type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Weekly Water Need:</span>
+                <span className="text-gray-800">{plant.weekly_water_need} mm</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Expected Humidity:</span>
+                <span className="text-gray-800">{plant.expected_humidity}%</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="font-medium text-gray-600">Watering Interval:</span>
                 <span className="text-gray-800">{plant.watering_interval} days</span>
               </div>
@@ -212,84 +156,19 @@ const PlantDetail = () => {
         </div>
       </div>
       
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Health Chart</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="startDate">
-              Start Date
-            </label>
-            <input
-              id="startDate"
-              name="startDate"
-              type="date"
-              value={dateRange.startDate}
-              onChange={handleDateRangeChange}
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2" htmlFor="endDate">
-              End Date
-            </label>
-            <input
-              id="endDate"
-              name="endDate"
-              type="date"
-              value={dateRange.endDate}
-              onChange={handleDateRangeChange}
-              className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
+      {location && plant && (
+        <div className="mb-6">
+          <PlantHealthChart plant={plant} location={location} />
         </div>
-        
-        {healthData.length > 0 ? (
-          <div className="h-80">
-            <Line options={chartOptions} data={chartData} />
-          </div>
-        ) : (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg">
-            <div className="flex">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p>No health data found for this date range.</p>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
       
-      {healthData.length > 0 && (
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Health Data</h2>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg overflow-hidden">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Health Score (%)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {healthData.map((data, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-700">{new Date(data.date).toLocaleDateString('en-US')}</td>
-                    <td className="py-3 px-4 text-sm">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${data.health_score >= 80 ? 'bg-green-100 text-green-800' : 
-                          data.health_score >= 60 ? 'bg-yellow-100 text-yellow-800' : 
-                          data.health_score >= 40 ? 'bg-orange-100 text-orange-800' : 
-                          'bg-red-100 text-red-800'}`}>
-                        {data.health_score}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {!location && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg mb-6">
+          <div className="flex">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>Health data cannot be displayed without location information. Please add a location to this plant.</p>
           </div>
         </div>
       )}
