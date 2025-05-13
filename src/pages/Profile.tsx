@@ -1,17 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   
-  const [name, setName] = useState(user?.firstName || '');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [profileError, setProfileError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  // Initialize form fields when user data is loaded
+  useEffect(() => {
+    if (isLoaded && user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+      setUsername(user.username || '');
+    }
+  }, [isLoaded, user]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,18 +34,13 @@ const Profile = () => {
       setLoading(true);
       
       if (user) {
-        console.log('Updating profile with name:', name);
+        console.log('Updating profile with name:', firstName, lastName);
         
-        // Split name into first and last parts
-        const nameParts = name.split(' ');
-        const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ') || undefined;
-        
-        // Clerk has camelCase types but requires snake_case parameters
-        // Using type assertion to bypass TypeScript checks
+        // Update user profile including firstName, lastName and username if changed
         await user.update({
-          firstName,
-          lastName
+          firstName: firstName || undefined,
+          lastName: lastName || undefined,
+          username: username || undefined
         });
         
         console.log('Profile updated successfully');
@@ -69,8 +76,27 @@ const Profile = () => {
     navigate('/login');
   };
 
-  if (!user) {
-    return <div>Loading user profile...</div>;
+  const handleDeleteAccount = async () => {
+    try {
+      setLoading(true);
+      
+      if (user) {
+        await user.delete();
+        await signOut();
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      setProfileError('Failed to delete account. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isLoaded || !user) {
+    return <div className="flex justify-center items-center p-8">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+    </div>;
   }
 
   return (
@@ -114,17 +140,43 @@ const Profile = () => {
           
           <form onSubmit={handleProfileUpdate}>
             <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">First Name</label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">Last Name</label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+              
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">Full Name</label>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
                 <input
-                  id="name"
-                  name="name"
+                  id="username"
+                  name="username"
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 />
-                <p className="mt-1 text-xs text-gray-500">Enter your full name (first and last name)</p>
+                <p className="mt-1 text-xs text-gray-500">Choose a unique username for your account</p>
               </div>
               
               <div>
@@ -179,7 +231,7 @@ const Profile = () => {
           <div className="flex justify-end">
             <button
               onClick={() => {
-                setPasswordError('Password resets are handled through Clerk\'s secure interface.');
+                setPasswordError('Redirecting to password reset page...');
                 navigate('/reset-password');
               }}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -193,12 +245,42 @@ const Profile = () => {
         <div className="p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Account Actions</h2>
           
-          <button
-            onClick={handleLogout}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            Sign Out
-          </button>
+          <div className="flex flex-col space-y-4">
+            <button
+              onClick={handleLogout}
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Sign Out
+            </button>
+            
+            {!deleteConfirm ? (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete Account
+              </button>
+            ) : (
+              <div className="border border-red-200 rounded-md p-4 bg-red-50">
+                <p className="text-sm text-red-700 mb-4">Are you sure you want to delete your account? This action cannot be undone.</p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={loading}
+                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    {loading ? 'Deleting...' : 'Yes, Delete My Account'}
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirm(false)}
+                    className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

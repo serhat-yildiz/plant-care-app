@@ -13,6 +13,7 @@ import Weather from './pages/Weather';
 import { clerkAppearance } from './lib/config';
 import { ProtectedRoute } from './lib/routes';
 import NotFound from './components/NotFound';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -49,6 +50,9 @@ function App() {
             />
           </AuthBackground>
         } />
+        
+        {/* Password Reset Page */}
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* Main application - protected by Clerk */}
         <Route path="/*" element={
