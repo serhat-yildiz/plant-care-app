@@ -22,11 +22,18 @@ const Profile = () => {
       setLoading(true);
       
       if (user) {
-        console.log('Updating profile with firstName:', name);
+        console.log('Updating profile with name:', name);
         
-        // Ensure we're using camelCase as required by Clerk API
+        // Split name into first and last parts
+        const nameParts = name.split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ') || undefined;
+        
+        // Clerk has camelCase types but requires snake_case parameters
+        // Using type assertion to bypass TypeScript checks
         await user.update({
-          firstName: name
+          firstName,
+          lastName
         });
         
         console.log('Profile updated successfully');
@@ -44,7 +51,8 @@ const Profile = () => {
           const errorString = JSON.stringify(error);
           console.error('Error object:', errorString);
           setProfileError(`Error: ${errorString}`);
-        } catch (_) {
+        } catch {
+          // Ignore stringify error
           console.error('Could not stringify error object');
           setProfileError('An error occurred while updating your profile.');
         }
@@ -116,6 +124,7 @@ const Profile = () => {
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                 />
+                <p className="mt-1 text-xs text-gray-500">Enter your full name (first and last name)</p>
               </div>
               
               <div>
