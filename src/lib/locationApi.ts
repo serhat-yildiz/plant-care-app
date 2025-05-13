@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { Location } from '../types/types';
 import { getCurrentUser } from './supabase';
 
-// Tüm konumları getir
+// Get all locations
 export const getLocations = async (): Promise<Location[]> => {
   try {
     const { data: locations, error } = await supabase
@@ -11,14 +11,14 @@ export const getLocations = async (): Promise<Location[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return locations || [];
+    return (locations as unknown as Location[]) || [];
   } catch (error) {
-    console.error('Konumlar alınırken hata oluştu:', error);
+    console.error('Error getting locations:', error);
     return [];
   }
 };
 
-// Kullanıcının konumlarını getir
+// Get user locations
 export const getUserLocations = async (): Promise<Location[]> => {
   try {
     const user = await getCurrentUser();
@@ -31,14 +31,14 @@ export const getUserLocations = async (): Promise<Location[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return locations || [];
+    return (locations as unknown as Location[]) || [];
   } catch (error) {
-    console.error('Kullanıcı konumları alınırken hata oluştu:', error);
+    console.error('Error getting user locations:', error);
     return [];
   }
 };
 
-// Belirli bir konumu getir
+// Get location by ID
 export const getLocationById = async (id: string): Promise<Location | null> => {
   try {
     const { data, error } = await supabase
@@ -48,18 +48,18 @@ export const getLocationById = async (id: string): Promise<Location | null> => {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Location;
   } catch (error) {
-    console.error('Konum detayları alınırken hata oluştu:', error);
+    console.error('Error getting location details:', error);
     return null;
   }
 };
 
-// Yeni konum ekle
+// Add new location
 export const addLocation = async (locationData: Omit<Location, 'id' | 'user_id' | 'created_at'>): Promise<Location | null> => {
   try {
     const user = await getCurrentUser();
-    if (!user) throw new Error('Kullanıcı oturum açmamış');
+    if (!user) throw new Error('User not logged in');
     
     const newLocation = {
       ...locationData,
@@ -74,14 +74,14 @@ export const addLocation = async (locationData: Omit<Location, 'id' | 'user_id' 
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Location;
   } catch (error) {
-    console.error('Konum eklenirken hata oluştu:', error);
+    console.error('Error adding location:', error);
     return null;
   }
 };
 
-// Konum güncelle
+// Update location
 export const updateLocation = async (id: string, locationData: Partial<Location>): Promise<Location | null> => {
   try {
     const { data, error } = await supabase
@@ -92,24 +92,24 @@ export const updateLocation = async (id: string, locationData: Partial<Location>
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Location;
   } catch (error) {
-    console.error('Konum güncellenirken hata oluştu:', error);
+    console.error('Error updating location:', error);
     return null;
   }
 };
 
-// Konum sil
+// Delete location
 export const deleteLocation = async (id: string): Promise<boolean> => {
   try {
-    // Önce bu konuma bağlı bitkileri kontrol et
+    // Check for plants at this location first
     const { data: plants } = await supabase
       .from('plants')
       .select('id')
       .eq('location_id', id);
     
     if (plants && plants.length > 0) {
-      throw new Error('Bu konuma bağlı bitkiler var. Önce bitkileri silmeli veya başka bir konuma taşımalısınız.');
+      throw new Error('This location has plants associated with it. Delete or move the plants first.');
     }
     
     const { error } = await supabase
@@ -120,7 +120,7 @@ export const deleteLocation = async (id: string): Promise<boolean> => {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Konum silinirken hata oluştu:', error);
+    console.error('Error deleting location:', error);
     return false;
   }
 }; 

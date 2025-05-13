@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import type { Plant } from '../types/types';
 import { getCurrentUser } from './supabase';
 
-// Tüm bitkileri getir
+// Get all plants
 export const getPlants = async (): Promise<Plant[]> => {
   try {
     const { data: plants, error } = await supabase
@@ -11,14 +11,14 @@ export const getPlants = async (): Promise<Plant[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return plants || [];
+    return (plants as unknown as Plant[]) || [];
   } catch (error) {
-    console.error('Bitkiler alınırken hata oluştu:', error);
+    console.error('Error getting plants:', error);
     return [];
   }
 };
 
-// Kullanıcının bitkilerini getir
+// Get user plants
 export const getUserPlants = async (): Promise<Plant[]> => {
   try {
     const user = await getCurrentUser();
@@ -31,14 +31,14 @@ export const getUserPlants = async (): Promise<Plant[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return plants || [];
+    return (plants as unknown as Plant[]) || [];
   } catch (error) {
-    console.error('Kullanıcı bitkileri alınırken hata oluştu:', error);
+    console.error('Error getting user plants:', error);
     return [];
   }
 };
 
-// Belirli bir konuma ait bitkileri getir
+// Get plants by location
 export const getPlantsByLocation = async (locationId: string): Promise<Plant[]> => {
   try {
     const { data: plants, error } = await supabase
@@ -48,14 +48,14 @@ export const getPlantsByLocation = async (locationId: string): Promise<Plant[]> 
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return plants || [];
+    return (plants as unknown as Plant[]) || [];
   } catch (error) {
-    console.error('Konum bitkileri alınırken hata oluştu:', error);
+    console.error('Error getting location plants:', error);
     return [];
   }
 };
 
-// Belirli bir bitkiyi getir
+// Get plant by ID
 export const getPlantById = async (id: string): Promise<Plant | null> => {
   try {
     const { data, error } = await supabase
@@ -65,18 +65,18 @@ export const getPlantById = async (id: string): Promise<Plant | null> => {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Plant;
   } catch (error) {
-    console.error('Bitki detayları alınırken hata oluştu:', error);
+    console.error('Error getting plant details:', error);
     return null;
   }
 };
 
-// Yeni bitki ekle
+// Add new plant
 export const addPlant = async (plantData: Omit<Plant, 'id' | 'user_id' | 'created_at'>): Promise<Plant | null> => {
   try {
     const user = await getCurrentUser();
-    if (!user) throw new Error('Kullanıcı oturum açmamış');
+    if (!user) throw new Error('User not logged in');
     
     const newPlant = {
       ...plantData,
@@ -91,14 +91,14 @@ export const addPlant = async (plantData: Omit<Plant, 'id' | 'user_id' | 'create
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Plant;
   } catch (error) {
-    console.error('Bitki eklenirken hata oluştu:', error);
+    console.error('Error adding plant:', error);
     return null;
   }
 };
 
-// Bitki güncelle
+// Update plant
 export const updatePlant = async (id: string, plantData: Partial<Plant>): Promise<Plant | null> => {
   try {
     const { data, error } = await supabase
@@ -109,14 +109,14 @@ export const updatePlant = async (id: string, plantData: Partial<Plant>): Promis
       .single();
     
     if (error) throw error;
-    return data;
+    return data as unknown as Plant;
   } catch (error) {
-    console.error('Bitki güncellenirken hata oluştu:', error);
+    console.error('Error updating plant:', error);
     return null;
   }
 };
 
-// Bitki sil
+// Delete plant
 export const deletePlant = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -127,15 +127,15 @@ export const deletePlant = async (id: string): Promise<boolean> => {
     if (error) throw error;
     return true;
   } catch (error) {
-    console.error('Bitki silinirken hata oluştu:', error);
+    console.error('Error deleting plant:', error);
     return false;
   }
 };
 
-// Sulama işlemini kaydet
+// Record watering
 export const recordWatering = async (plantId: string): Promise<boolean> => {
   try {
-    // Sulamayı kaydederken bitkinin son sulama tarihini güncelle
+    // Update plant's last watering date
     const today = new Date().toISOString().split('T')[0];
     
     const { error } = await supabase
@@ -145,8 +145,8 @@ export const recordWatering = async (plantId: string): Promise<boolean> => {
     
     if (error) throw error;
     
-    // İsterseniz ayrı bir watering_history tablosuna da kayıt yapabilirsiniz
-    // Örnek:
+    // Optionally, you could also add a record to a watering_history table
+    // Example:
     // await supabase.from('watering_history').insert({
     //   plant_id: plantId,
     //   date: today,
@@ -154,16 +154,16 @@ export const recordWatering = async (plantId: string): Promise<boolean> => {
     
     return true;
   } catch (error) {
-    console.error('Sulama kaydedilirken hata oluştu:', error);
+    console.error('Error recording watering:', error);
     return false;
   }
 };
 
-// Bitki resmi yükle
+// Upload plant image
 export const uploadPlantImage = async (file: File): Promise<string | null> => {
   try {
     const user = await getCurrentUser();
-    if (!user) throw new Error('Kullanıcı oturum açmamış');
+    if (!user) throw new Error('User not logged in');
     
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -180,7 +180,7 @@ export const uploadPlantImage = async (file: File): Promise<string | null> => {
     
     return data.publicUrl;
   } catch (error) {
-    console.error('Bitki resmi yüklenirken hata oluştu:', error);
+    console.error('Error uploading plant image:', error);
     return null;
   }
 }; 
