@@ -12,6 +12,7 @@ import AuthBackground from './components/backgrounds/AuthBackground';
 import Weather from './pages/Weather';
 import { clerkAppearance } from './lib/config';
 import { ProtectedRoute } from './lib/routes';
+import NotFound from './components/NotFound';
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
                       <Route path="/locations/:id" element={<LocationDetail />} />
                       <Route path="/profile" element={<Profile />} />
                       <Route path="/weather" element={<Weather />} />
+                      <Route path="*" element={<NotFound />} />
                     </Routes>
                   </div>
                 </main>
@@ -63,6 +65,9 @@ function App() {
             </div>
           </ProtectedRoute>
         } />
+        
+        {/* 404 Page - For non-authenticated routes that don't exist */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
