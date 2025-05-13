@@ -4,7 +4,10 @@ export const clerkAppearance = {
     logoPlacement: 'inside' as const,
     logoImageUrl: 'https://cdn-icons-png.flaticon.com/512/628/628324.png',
     showOptionalFields: true,
-    socialButtonsVariant: 'iconButton' as const
+    socialButtonsVariant: 'iconButton' as const,
+    socialButtonsPlacement: 'top' as const,
+    privacyPageUrl: '/privacy',
+    termsPageUrl: '/terms',
   },
   elements: {
     rootBox: {
@@ -26,6 +29,29 @@ export const clerkAppearance = {
       fontSize: '1.5rem',
       fontWeight: 'bold',
       color: '#166534' // dark green color
+    },
+    socialButtonsIconButton: {
+      border: '1px solid #e2e8f0',
+      borderRadius: '0.375rem',
+      margin: '0.25rem',
+      '&:hover': {
+        backgroundColor: '#f8fafc'
+      }
+    },
+    socialButtonsBlockButton: {
+      backgroundColor: '#f8fafc',
+      border: '1px solid #e2e8f0',
+      borderRadius: '0.375rem',
+      margin: '0.25rem 0',
+      '&:hover': {
+        backgroundColor: '#f1f5f9'
+      }
+    },
+    dividerLine: {
+      backgroundColor: '#e2e8f0'
+    },
+    dividerText: {
+      color: '#64748b'
     },
     formButtonPrimary: {
       backgroundColor: '#16a34a', // green-600
@@ -66,4 +92,37 @@ export const clerkAppearance = {
       }
     }
   }
+};
+
+// Clerk localization to customize text
+export const clerkLocalization = {
+  signIn: {
+    start: {
+      title: "Welcome to Plant Care App",
+      subtitle: "Sign in to manage your plants",
+      actionText: "Don't have an account?",
+      actionLink: "Sign up"
+    },
+    emailCode: {
+      title: "Check your email",
+      subtitle: "We've sent a verification code to your email"
+    },
+    password: {
+      title: "Welcome back",
+      subtitle: "Enter your password to access your plants"
+    }
+  },
+  signUp: {
+    start: {
+      title: "Create your Plant Care account",
+      subtitle: "Sign up to start tracking your plants",
+      actionText: "Already have an account?",
+      actionLink: "Sign in"
+    }
+  },
+  userButton: {
+    action__signOut: "Sign out"
+  },
+  socialButtonsBlockButton: "Continue with {{provider}}",
+  dividerText: "or continue with"
 }; 

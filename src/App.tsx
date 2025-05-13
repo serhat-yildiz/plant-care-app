@@ -22,20 +22,30 @@ function App() {
         <Route path="/login" element={
           <AuthBackground>
             <SignIn 
-              routing="path" 
-              path="/login" 
+              routing="hash" 
               appearance={clerkAppearance}
               signUpUrl="/register"
+              redirectUrl="/"
+              // OAuth optimization
+              afterSignInUrl="/"
+              // Enable auto handling of OAuth accounts
+              oauthFlow="auto"
+              // Enable email authentication properly
+              signInUrl="/login"
+              afterSignUpUrl="/"
             />
           </AuthBackground>
         } />
         <Route path="/register" element={
           <AuthBackground>
             <SignUp 
-              routing="path" 
-              path="/register" 
+              routing="hash" 
               appearance={clerkAppearance}
               signInUrl="/login"
+              redirectUrl="/"
+              afterSignUpUrl="/"
+              // Enable auto handling of OAuth accounts
+              oauthFlow="auto"
             />
           </AuthBackground>
         } />

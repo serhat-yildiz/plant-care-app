@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { ClerkProvider } from '@clerk/clerk-react'
 import './index.css'
 import App from './App.tsx'
+import { clerkAppearance, clerkLocalization } from './lib/config'
 
 // Get the publishable key from environment variables
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -13,7 +14,11 @@ if (!publishableKey) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider 
+      publishableKey={publishableKey}
+      appearance={clerkAppearance}
+      localization={clerkLocalization}
+    >
       <App />
     </ClerkProvider>
   </StrictMode>,
