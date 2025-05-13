@@ -1,99 +1,151 @@
-# Plant Care App
+# Plant Care Application
 
-A modern application to help you track and care for your plants.
+A modern web application for managing and monitoring plant health using real-time weather data. This application helps users track their plants' well-being across multiple locations, with intelligent health assessments based on local weather conditions.
 
 ## Features
 
-- User authentication with Clerk
-- Track plant watering schedules
-- Monitor plant health
-- Organize plants by location
-- View plant care history
+- **Plant Management**: Add, edit, and delete plants with detailed metadata
+- **Health Monitoring**: Automatic evaluation of plant health based on weather data vs. expected needs
+- **Multiple Locations**: Support for plants in different physical locations with location-specific weather data
+- **Historical Data**: View and analyze plant health over time with customizable date ranges
+- **Weather Integration**: Real-time weather data from Open-Meteo API for accurate plant care recommendations
+- **Responsive Design**: Mobile-friendly interface built with React and TailwindCSS
+- **User Authentication**: Secure login and registration with Clerk
 
 ## Technology Stack
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS
-- Clerk Authentication
-- React Router
-- Chart.js
+- **Frontend**: React 19, TypeScript, TailwindCSS
+- **Backend**: Supabase (PostgreSQL database)
+- **Authentication**: Clerk
+- **API Integration**: Open-Meteo weather API
+- **Charting**: Chart.js with react-chartjs-2
+- **Routing**: React Router Dom
+- **Build Tool**: Vite
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v18+)
 - npm or yarn
+- Supabase account
+- Clerk account
 
-### Installation
+### Setup
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/plant-care-app.git
+   ```
+   git clone https://github.com/your-username/plant-care-app.git
    cd plant-care-app
    ```
 
 2. Install dependencies:
-   ```bash
+   ```
    npm install
    ```
 
-3. Create a `.env.local` file in the root directory with your Clerk API keys:
+3. Create a `.env` file in the root directory with the following variables:
    ```
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
    VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
    ```
 
 4. Start the development server:
-   ```bash
+   ```
    npm run dev
    ```
 
-## Setting Up Clerk Authentication
+## Database Schema
 
-1. Create a Clerk account at [clerk.com](https://clerk.com)
+The application uses the following data models:
 
-2. Create a new application in the Clerk dashboard
+- **Plants**: Type, water needs, expected humidity, location, image
+- **Locations**: Name, city, country, geographic coordinates
+- **Plant Health**: Historical data on plant health scores, actual weather conditions
+- **User**: Authentication and profile information
 
-3. Get your API keys from the Clerk dashboard:
-   - Go to API Keys in your Clerk dashboard
-   - Copy the "Publishable Key"
+## Key Features Implementation
 
-4. Add the key to your `.env.local` file:
-   ```
-   VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-   ```
+### Plant Health Calculation
 
-5. Configure your application URLs in the Clerk dashboard:
-   - Add your application URL (e.g., `http://localhost:5173`) to the allowed URLs
-   - Set up redirect URLs in the Clerk dashboard:
-     - Sign In URL: `/login`
-     - Sign Up URL: `/register`
-     - After Sign In URL: `/`
-     - After Sign Up URL: `/`
+Plants' health is calculated based on the comparison between expected conditions (water needs, humidity) and actual weather data:
+
+```typescript
+export function calculatePlantHealth(
+  actualWater: number,
+  expectedWater: number,
+  actualHumidity: number,
+  expectedHumidity: number
+): number {
+  // Calculate water score (50% of total)
+  const waterDifference = Math.abs(actualWater - expectedWater);
+  const maxWaterDifference = expectedWater;
+  const waterScore = 50 * (1 - Math.min(waterDifference / maxWaterDifference, 1));
+  
+  // Calculate humidity score (50% of total)
+  const humidityDifference = Math.abs(actualHumidity - expectedHumidity);
+  const maxHumidityDifference = 50;
+  const humidityScore = 50 * (1 - Math.min(humidityDifference / maxHumidityDifference, 1));
+  
+  // Combined score
+  return Math.round(waterScore + humidityScore);
+}
+```
+
+### Weather Data Integration
+
+The application fetches real-time and historical weather data from the Open-Meteo API:
+
+```typescript
+export async function fetchHistoricalWeather(
+  latitude: number,
+  longitude: number,
+  startDate: string,
+  endDate: string
+): Promise<WeatherData[]> {
+  // API integration code
+}
+```
+
+### Plant Management
+
+Users can add new plants, edit existing ones, and track their health over time. Each plant can be assigned to a specific location and has custom parameters like water needs and expected humidity.
+
+### Multi-Location Support
+
+The application supports multiple locations, each with its own set of plants and weather conditions.
 
 ## Project Structure
 
-- `/src`: Source code
-  - `/components`: Reusable UI components
-  - `/pages`: Application pages/routes
-  - `/lib`: Utilities and helpers
-  - `/types`: TypeScript type definitions
+```
+plant-care-app/
+├── src/
+│   ├── components/       # UI components
+│   ├── lib/             # API and utility functions
+│   ├── pages/           # Application pages
+│   ├── types/           # TypeScript type definitions
+│   ├── App.tsx          # Main application component
+│   └── main.tsx         # Application entry point
+├── public/              # Static assets
+├── .env                 # Environment variables (create this)
+├── package.json         # Project dependencies
+└── README.md            # This file
+```
 
-## Authentication Flow
+## Deployment
 
-The application uses Clerk for authentication with the following flow:
+To build the production version:
 
-1. Users can sign up or sign in through Clerk's secure UI
-2. Protected routes require authentication
-3. User profile and session management is handled by Clerk
-4. Sign-out functionality is provided in the header and profile page
+```
+npm run build
+```
 
-## Contributing
+The built files will be in the `dist` directory, ready for deployment to your preferred hosting service.
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Submit a pull request
+## Future Enhancements
+
+- Email notifications for plant care reminders
+- Mobile app version
+- Plant recognition via photo upload
+- Community features for plant care tips
