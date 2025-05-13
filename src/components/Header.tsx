@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useUser, useClerk } from '@clerk/clerk-react';
 
@@ -7,6 +7,7 @@ const Header = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
   const navigate = useNavigate();
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const userName = user?.firstName || user?.username || 'User';
 
@@ -19,9 +20,23 @@ const Header = () => {
     navigate('/login');
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <header className="bg-gradient-to-r from-green-600 to-emerald-500 shadow-md">
-      <div className="px-[60px] mx-auto flex justify-between items-center p-4">
+      <div className="container mx-auto flex justify-between items-center p-4">
         <div className="flex items-center">
           <Link to="/" className="flex items-center text-xl font-bold text-white hover:opacity-90 transition">
             <span className="text-white mr-2">
@@ -37,7 +52,7 @@ const Header = () => {
           </Link>
         </div>
 
-        <div className="flex items-center relative">
+        <div className="flex items-center relative" ref={dropdownRef}>
           <button
             onClick={toggleDropdown}
             className="bg-white/20 text-sm text-white px-4 py-2 rounded-full shadow-sm flex items-center hover:bg-white/30 transition"
