@@ -8,9 +8,8 @@ import Sidebar from './components/Sidebar';
 import PlantDetail from './pages/PlantDetail';
 import LocationDetail from './pages/LocationDetail';
 import Profile from './pages/Profile';
-import ResetPassword from './pages/ResetPassword';
-import UpdatePassword from './pages/UpdatePassword';
 import AuthBackground from './components/backgrounds/AuthBackground';
+import Weather from './pages/Weather';
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -122,8 +121,6 @@ function App() {
             />
           </AuthBackground>
         } />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/update-password" element={<UpdatePassword />} />
         
         {/* Main application - protected by Clerk */}
         <Route path="/*" element={
@@ -141,6 +138,7 @@ function App() {
                       <Route path="/plants/:id" element={<PlantDetail />} />
                       <Route path="/locations/:id" element={<LocationDetail />} />
                       <Route path="/profile" element={<Profile />} />
+                      <Route path="/weather" element={<Weather />} />
                     </Routes>
                   </div>
                 </main>
